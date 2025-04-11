@@ -1,0 +1,206 @@
+#!/bin/sh
+
+# Defining the default visual style to be used in applications that use Qt
+[[ -z $QT_STYLE_OVERRIDE ]] && export QT_STYLE_OVERRIDE="kvantum"
+[[ -z $QT_QPA_PLATFORMTHEME ]] && export QT_QPA_PLATFORMTHEME="cinnamon"
+[[ -z $QT_WAYLAND_DECORATION ]] && export QT_WAYLAND_DECORATION="adwaita"
+
+# Apps in electron use wayland
+[[ -z $ELECTRON_OZONE_PLATFORM_HINT ]] && export ELECTRON_OZONE_PLATFORM_HINT="auto"
+
+# Check system theme to apply if the QT theme is clade or dark
+if [ -f "/usr/share/sync-kde-and-gtk-places/sync-gnome-theme-to-qt.sh" ]; then
+    # Tenta executar 3 vezes com intervalo de 1 segundo
+    for i in {1..3}; do
+        if /usr/share/sync-kde-and-gtk-places/sync-gnome-theme-to-qt.sh; then
+            logger "sync-gnome-theme-to-qt.sh executed successfully"
+            break
+        else
+            logger "Failed to execute sync-gnome-theme-to-qt.sh, attempt $i"
+            sleep 0.5
+        fi
+    done
+else
+    logger "sync-gnome-theme-to-qt.sh not found"
+fi
+
+# Force language
+if [ "$LANGUAGE" = "" ]; then
+    [[ -z $LANGUAGE ]] && export LANGUAGE=$LANG
+fi
+
+# Render loop basic if using software render and change GTK4 from vulkan to ngl
+if vulkaninfo --summary 2> /dev/null | grep 'deviceName' | grep -vq 'llvmpipe'; then
+    unset QSG_RENDER_LOOP
+    # Temporarily forcing GTK Renderer GL since 2024/10/11
+    [[ -z $GSK_RENDERER ]] && export GSK_RENDERER="vulkan"
+else
+    export QSG_RENDER_LOOP="basic"
+    [[ -z $GSK_RENDERER ]] && export GSK_RENDERER="ngl"
+fi
+
+# Checks if the shell has already been changed
+if [ ! -f "$HOME/.biglinux-shell-changed" ]; then
+    biglinux-change-default-shell bash-power
+    touch "$HOME/.biglinux-shell-changed"
+fi
+
+# Faster AMD GPU
+[[ -z $RADV_PERFTEST ]] && export RADV_PERFTEST="sam,nggc,ext_ms"
+
+# OBS Studio game capture with vulkan
+if [ -e "/usr/bin/obs-vkcapture" ]; then
+    [[ -z $OBS_USE_EGL ]] && export OBS_USE_EGL=1
+    [[ -z $OBS_VKCAPTURE ]] && export OBS_VKCAPTURE=1
+    [[ -z $VK_INSTANCE_LAYERS ]] && export VK_INSTANCE_LAYERS="VK_LAYER_OBS_vkcapture_64:VK_LAYER_VALVE_steam_overlay_64" #Fix MangoHUD overlay
+fi
+
+# Keyboard LED
+if [ -e "$HOME/.config/ledkeyboard" ]; then
+   change-keyboard-led on
+fi
+
+# Define the correct dconf path based on desktop environment
+if [[ "$XDG_SESSION_DESKTOP" = "cinnamon" ]]; then
+    dconfPath=/org/cinnamon/desktop/interface/cursor-theme
+else
+    dconfPath=/org/gnome/desktop/interface/cursor-theme
+fi
+
+# Get the current cursor theme
+currentTheme=$(dconf read $dconfPath)
+
+# Check if the current theme is 'Breeze_Light'
+if [ "$currentTheme" == "'Breeze_Light'" ]; then
+    # Change the cursor theme to 'Bibata-Modern-Classic'
+    dconf write $dconfPath "'Bibata-Modern-Classic'"
+fi
+
+# Enable automatic mounting of devices
+gsettings set org.gnome.desktop.media-handling automount true
+
+# START Configuration dconf
+# Base directory for configurations
+dconf_dir="$HOME/.config/dconf"
+log_file="/tmp/dconf-switch.log"
+
+# Function to log messages
+log_message() {
+    echo "[$(date '+%Y-%m-%d %H:%M:%S')] $1" | tee -a "$log_file"
+}
+
+# Function to switch dconf configurations between desktop environments
+switch_dconf_config() {
+    local desktop_env=$1
+    
+    # Ensure directory exists
+    mkdir -p "$dconf_dir"
+    
+    # Clear old log
+    echo "" > "$log_file"
+    chmod 666 "$log_file"  # Garantir permissões de leitura/escrita
+    
+    # Debug logs
+    log_message "Script started"
+    log_message "Desktop Environment: $desktop_env"
+    log_message "XDG_CURRENT_DESKTOP: $XDG_CURRENT_DESKTOP"
+    
+    # Kill any existing dconf-watch processes
+    if pgrep -f "dconf watch /" > /dev/null; then
+        log_message "Killing existing dconf watch processes"
+        pkill -f "dconf watch /"
+        sleep 1
+    fi
+
+    if [ "$desktop_env" = "cinnamon" ]; then
+        log_message "Detected Cinnamon environment"
+        
+        # Load latest Cinnamon configuration
+        if [ -f "$dconf_dir/settings.cinnamon" ]; then
+            log_message "Loading existing Cinnamon settings"
+            dconf reset -f /
+            dconf load / < "$dconf_dir/settings.cinnamon"
+        else
+            log_message "No existing Cinnamon settings found"
+        fi
+        
+        # Monitor Cinnamon changes in a separate process
+        (
+            log_message "Starting Cinnamon settings monitor"
+            while true; do
+                dconf watch / | while read -r change; do
+                    log_message "Change detected: $change"
+                    log_message "Saving to: $dconf_dir/settings.cinnamon"
+                    dconf dump / > "$dconf_dir/settings.cinnamon.tmp" && \
+                    mv "$dconf_dir/settings.cinnamon.tmp" "$dconf_dir/settings.cinnamon"
+                done
+            done
+        ) &
+        echo $! > "/tmp/dconf-watch.pid"
+        
+    else
+        log_message "Detected non-Cinnamon environment"
+        
+        # Load default settings
+        if [ -f "$dconf_dir/settings.default" ]; then
+            log_message "Loading default settings"
+            dconf reset -f /
+            dconf load / < "$dconf_dir/settings.default"
+        fi
+        
+        # Monitor changes
+        (
+            log_message "Starting default settings monitor"
+            while true; do
+                dconf watch / | while read -r change; do
+                    log_message "Change detected: $change"
+                    log_message "Saving to: $dconf_dir/settings.default"
+                    dconf dump / > "$dconf_dir/settings.default.tmp" && \
+                    mv "$dconf_dir/settings.default.tmp" "$dconf_dir/settings.default"
+                done
+            done
+        ) &
+        echo $! > "/tmp/dconf-watch.pid"
+    fi
+}
+
+# Detect current desktop environment
+detect_desktop_env() {
+    if [[ "$XDG_CURRENT_DESKTOP" = *"Cinnamon"* ]] || \
+       [[ "$DESKTOP_SESSION" = "cinnamon" ]] || \
+       [[ "$XDG_SESSION_DESKTOP" = "cinnamon" ]]; then
+        echo "cinnamon"
+    else
+        echo "default"
+    fi
+}
+
+# Main execution
+main() {
+    current_desktop=$(detect_desktop_env)
+    log_message "Detected desktop: $current_desktop"
+    switch_dconf_config "$current_desktop"
+}
+
+# Run main script
+main
+# END Configuration dconf
+
+## Execute in LiveCD
+if [ -e /usr/bin/startbiglive ]; then
+    # Revert variables to Gnome
+    export DESKTOP_SESSION=cinnamon
+    export XDG_SESSION_DESKTOP=cinnamon
+    export XDG_CURRENT_DESKTOP=X-Cinnamon
+    export GDMSESSION=cinnamon
+
+    # Enables basic, unencrypted password storage in Chromium-based browsers
+    sudo sed -i '/--password-store=basic/!s/\(exec \/usr\/lib\/brave-browser\/brave "$@" $USER_FLAGS\)$/\1 --password-store=basic/' /usr/bin/brave
+
+    # Updates user directories
+    LANG=$LANG xdg-user-dirs-update --force
+    
+    # Disable the lock screen and screensaver
+    gsettings set org.cinnamon.desktop.screensaver lock-enabled false
+    gsettings set org.cinnamon.desktop.screensaver idle-activation-enabled false
+fi

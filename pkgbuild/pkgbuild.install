@@ -1,0 +1,81 @@
+#!/usr/bin/env bash
+
+# This file contains scripts that are executed at different stages of package installation/upgrade/removal
+
+# Color definitions for status messages
+blueDark="\e[1;38;5;33m"     # Bold dark blue
+mediumBlue="\e[1;38;5;32m"   # Bold medium blue
+lightBlue="\e[1;38;5;39m"    # Bold light blue
+cyan="\e[1;38;5;45m"         # Bold cyan
+white="\e[1;97m"             # Bold white
+reset="\e[0m"                # Reset text formatting
+
+# Print status messages
+printMsg() {
+    local message=$1
+    echo -e "${blueDark}[${lightBlue}comm-cinnamon-config${blueDark}]${reset} ${cyan}→${reset} ${white}${message}${reset}"
+}
+
+# Function executed before package installation
+# pre_install() {
+#    # Check if original file exists
+#    if [ -f /usr/share/cinnamon/cinnamon-settings/modules/cs_keyboard.py ]; then
+#        # If exists and is not already a backup, create backup
+#        printMsg "Creating backup of cs_keyboard.py..."
+#        if [ ! -f /usr/share/cinnamon/cinnamon-settings/modules/cs_keyboard.py.bak ]; then
+#            mv /usr/share/cinnamon/cinnamon-settings/modules/cs_keyboard.py /usr/share/cinnamon/cinnamon-settings/modules/cs_keyboard.py.bak
+#        fi
+#    fi
+# }
+
+# Function executed after package installation
+post_install() {
+#    # Rename our file to the correct name
+#    if [ -f /usr/share/cinnamon/cinnamon-settings/modules/cs_keyboard.py.new ]; then
+#        printMsg "Installing modified cs_keyboard.py..."
+#        mv /usr/share/cinnamon/cinnamon-settings/modules/cs_keyboard.py.new /usr/share/cinnamon/cinnamon-settings/modules/cs_keyboard.py
+#    fi
+
+    # Check if slick-greeter is installed
+    printMsg "Checking LightDM configuration..."
+    if grep -q '^greeter-session=lightdm-slick-greeter$' /etc/lightdm/lightdm.conf; then
+        printMsg "Slick Greeter already configured correctly"
+        return 0
+    else
+        printMsg "Setting Slick Greeter as default LightDM greeter"
+        sed -i 's/^greeter-session=.*$/greeter-session=lightdm-slick-greeter/' /etc/lightdm/lightdm.conf
+        printMsg "LightDM configuration updated successfully"
+    fi
+}
+
+# Function executed before package upgrade
+# pre_upgrade() {
+#     printMsg "Preparing to upgrade the package..."
+#     # Example: Backup configuration files
+#     # cp /etc/mypackage/config.conf /etc/mypackage/config.conf.bak
+# }
+
+# Function executed after package upgrade
+post_upgrade() {
+    printMsg "Running post-upgrade operations..."
+    post_install
+    printMsg "Upgrade completed successfully"
+}
+
+# Function executed before package removal
+# pre_remove() {
+#     printMsg "Preparing to remove the package..."
+#     # Example: Stop services
+#     # systemctl stop myservice.service
+#     # systemctl disable myservice.service
+# }
+
+# Function executed after package removal
+# post_remove() {
+#    # Restore original backup
+#    if [ -f /usr/share/cinnamon/cinnamon-settings/modules/cs_keyboard.py.bak ]; then
+#        printMsg "Restoring original cs_keyboard.py..."
+#        mv /usr/share/cinnamon/cinnamon-settings/modules/cs_keyboard.py.bak /usr/share/cinnamon/cinnamon-settings/modules/cs_keyboard.py
+#        printMsg "Original file restored successfully"
+#    fi
+# }
