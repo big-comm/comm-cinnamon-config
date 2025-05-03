@@ -11,6 +11,7 @@ conflicts=('big-skel' 'bashrc-manjaro' 'lightdm-webkit2-greeter' 'lightdm-webkit
 #replaces=('')
 pkgver=$(date +%y.%m.%d)
 pkgrel=$(date +%H%M)
+epoch=1
 arch=('any')
 license=('MIT')
 url="https://github.com/big-comm/${pkgname}"
