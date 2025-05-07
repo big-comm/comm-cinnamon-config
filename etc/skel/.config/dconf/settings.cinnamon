@@ -1,3 +1,6 @@
+[org/blueberry]
+obex-enabled=false
+
 [org/cinnamon]
 alttab-switcher-delay=100
 app-menu-icon-name='comm-menu'
@@ -7,6 +10,9 @@ panel-edit-mode=false
 panel-zone-icon-sizes='[{"panelId": 1, "left": -1, "center": 0, "right": 24}]'
 panel-zone-symbolic-icon-sizes='[{"panelId": 1, "left": 28, "center": 28, "right": 16}]'
 panels-height=['1:40']
+
+[org/cinnamon/cinnamon-session]
+quit-time-delay=60
 
 [org/cinnamon/desktop/a11y/applications]
 screen-keyboard-enabled=false
@@ -49,6 +55,10 @@ screenshot=@as []
 [org/cinnamon/desktop/notifications]
 bottom-notifications=true
 notification-duration=4
+
+[org/cinnamon/desktop/screensaver]
+idle-activation-enabled=false
+lock-enabled=false
 
 [org/cinnamon/desktop/sound]
 event-sounds=false
