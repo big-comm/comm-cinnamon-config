@@ -84,6 +84,11 @@ swipe-up-3='TOGGLE_EXPO::end'
 swipe-up-4='VOLUME_UP::end'
 tap-3='MEDIA_PLAY_PAUSE::end'
 
+[org/cinnamon/launcher]
+check-frequency=300
+memory-limit=2048
+memory-limit-enabled=false
+
 [org/cinnamon/muffin]
 draggable-border-width=10
 unredirect-fullscreen-windows=true
