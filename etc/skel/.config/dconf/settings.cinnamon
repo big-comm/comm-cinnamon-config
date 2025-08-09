@@ -1,3 +1,7 @@
+[io/github/celluloid-player/celluloid]
+mpv-config-enable=true
+mpv-config-file='file:///etc/skel/.config/mpv/mpv.conf'
+
 [org/blueberry]
 obex-enabled=false
 
