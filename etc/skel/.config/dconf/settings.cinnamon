@@ -31,7 +31,7 @@ secondary-click-time=1.2
 
 [org/cinnamon/desktop/background]
 picture-options='zoom'
-picture-uri='file:///usr/share/backgrounds/community/default-owl.jpg'
+picture-uri='file:///usr/share/backgrounds/community/default-cinnamon.jpg'
 
 [org/cinnamon/desktop/background/slideshow]
 delay=15

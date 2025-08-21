@@ -160,7 +160,7 @@
         "default": [
             "nemo.desktop",
             "brave-browser.desktop",
-            "org.gnome.Terminal.desktop"
+            "org.communitybig.ashyterm.desktop"
         ],
         "value": [
             "nemo.desktop",
