@@ -86,14 +86,62 @@ fi
 # Enable automatic mounting of devices
 gsettings set org.gnome.desktop.media-handling automount true
 
-# START Configuration dconf
-# Base directory for configurations
+
+# --- START Configuration dconf and mimeapps
+# Base directories for configurations
 dconf_dir="$HOME/.config/dconf"
+mimeapps_dir="$HOME/.config"
 log_file="/tmp/dconf-switch.log"
 
 # Function to log messages
 log_message() {
     echo "[$(date '+%Y-%m-%d %H:%M:%S')] $1" | tee -a "$log_file"
+}
+
+# Function to manage mimeapps configuration
+switch_mimeapps_config() {
+    local desktop_env=$1
+    
+    log_message "Managing mimeapps for $desktop_env environment"
+    
+    # Kill any existing mimeapps-watch processes
+    if pgrep -f "mimeapps-watch-$desktop_env" > /dev/null; then
+        log_message "Killing existing mimeapps watch processes"
+        pkill -f "mimeapps-watch-$desktop_env"
+        sleep 1
+    fi
+    
+    # Load specific mimeapps configuration
+    if [ -f "$mimeapps_dir/$desktop_env.mimeapps.list" ]; then
+        log_message "Loading $desktop_env mimeapps configuration"
+        cp "$mimeapps_dir/$desktop_env.mimeapps.list" "$mimeapps_dir/mimeapps.list"
+    else
+        log_message "No specific mimeapps configuration found for $desktop_env"
+        # Create empty file if none exists
+        touch "$mimeapps_dir/mimeapps.list"
+    fi
+    
+    # Monitor mimeapps changes in a separate process
+    (
+        log_message "Starting mimeapps monitor for $desktop_env"
+        while true; do
+            if command -v inotifywait >/dev/null 2>&1; then
+                # Use inotifywait if available
+                inotifywait -e modify,move,create "$mimeapps_dir/mimeapps.list" 2>/dev/null
+            else
+                # Fallback to polling every 2 seconds
+                sleep 2
+            fi
+            
+            if [ -f "$mimeapps_dir/mimeapps.list" ]; then
+                log_message "Mimeapps change detected"
+                log_message "Saving to: $mimeapps_dir/$desktop_env.mimeapps.list"
+                cp "$mimeapps_dir/mimeapps.list" "$mimeapps_dir/$desktop_env.mimeapps.list.tmp" && \
+                mv "$mimeapps_dir/$desktop_env.mimeapps.list.tmp" "$mimeapps_dir/$desktop_env.mimeapps.list"
+            fi
+        done
+    ) &
+    echo $! > "/tmp/mimeapps-watch-$desktop_env.pid"
 }
 
 # Function to switch dconf configurations between desktop environments
@@ -105,7 +153,7 @@ switch_dconf_config() {
     
     # Clear old log
     echo "" > "$log_file"
-    chmod 666 "$log_file"  # Garantir permissões de leitura/escrita
+    chmod 666 "$log_file"  # Ensure read/write permissions
     
     # Debug logs
     log_message "Script started"
@@ -119,56 +167,30 @@ switch_dconf_config() {
         sleep 1
     fi
 
-    if [ "$desktop_env" = "cinnamon" ]; then
-        log_message "Detected Cinnamon environment"
-        
-        # Load latest Cinnamon configuration
-        if [ -f "$dconf_dir/settings.cinnamon" ]; then
-            log_message "Loading existing Cinnamon settings"
-            dconf reset -f /
-            dconf load / < "$dconf_dir/settings.cinnamon"
-        else
-            log_message "No existing Cinnamon settings found"
-        fi
-        
-        # Monitor Cinnamon changes in a separate process
-        (
-            log_message "Starting Cinnamon settings monitor"
-            while true; do
-                dconf watch / | while read -r change; do
-                    log_message "Change detected: $change"
-                    log_message "Saving to: $dconf_dir/settings.cinnamon"
-                    dconf dump / > "$dconf_dir/settings.cinnamon.tmp" && \
-                    mv "$dconf_dir/settings.cinnamon.tmp" "$dconf_dir/settings.cinnamon"
-                done
-            done
-        ) &
-        echo $! > "/tmp/dconf-watch.pid"
-        
+    log_message "Detected $desktop_env environment"
+    
+    # Load latest configuration for the detected desktop environment
+    if [ -f "$dconf_dir/settings.$desktop_env" ]; then
+        log_message "Loading existing $desktop_env settings"
+        dconf reset -f /
+        dconf load / < "$dconf_dir/settings.$desktop_env"
     else
-        log_message "Detected non-Cinnamon environment"
-        
-        # Load default settings
-        if [ -f "$dconf_dir/settings.default" ]; then
-            log_message "Loading default settings"
-            dconf reset -f /
-            dconf load / < "$dconf_dir/settings.default"
-        fi
-        
-        # Monitor changes
-        (
-            log_message "Starting default settings monitor"
-            while true; do
-                dconf watch / | while read -r change; do
-                    log_message "Change detected: $change"
-                    log_message "Saving to: $dconf_dir/settings.default"
-                    dconf dump / > "$dconf_dir/settings.default.tmp" && \
-                    mv "$dconf_dir/settings.default.tmp" "$dconf_dir/settings.default"
-                done
-            done
-        ) &
-        echo $! > "/tmp/dconf-watch.pid"
+        log_message "No existing $desktop_env settings found"
     fi
+    
+    # Monitor changes in a separate process
+    (
+        log_message "Starting $desktop_env settings monitor"
+        while true; do
+            dconf watch / | while read -r change; do
+                log_message "Change detected: $change"
+                log_message "Saving to: $dconf_dir/settings.$desktop_env"
+                dconf dump / > "$dconf_dir/settings.$desktop_env.tmp" && \
+                mv "$dconf_dir/settings.$desktop_env.tmp" "$dconf_dir/settings.$desktop_env"
+            done
+        done
+    ) &
+    echo $! > "/tmp/dconf-watch.pid"
 }
 
 # Detect current desktop environment
@@ -177,6 +199,15 @@ detect_desktop_env() {
        [[ "$DESKTOP_SESSION" = "cinnamon" ]] || \
        [[ "$XDG_SESSION_DESKTOP" = "cinnamon" ]]; then
         echo "cinnamon"
+    elif [[ "$XDG_CURRENT_DESKTOP" = *"GNOME"* ]] || \
+         [[ "$DESKTOP_SESSION" = "gnome" ]] || \
+         [[ "$XDG_SESSION_DESKTOP" = "gnome" ]]; then
+        echo "gnome"
+    elif [[ "$XDG_CURRENT_DESKTOP" = *"XFCE"* ]] || \
+         [[ "$DESKTOP_SESSION" = "xfce4" ]] || \
+         [[ "$DESKTOP_SESSION" = "xfce" ]] || \
+         [[ "$XDG_SESSION_DESKTOP" = "xfce" ]]; then
+        echo "xfce"
     else
         echo "default"
     fi
@@ -186,12 +217,14 @@ detect_desktop_env() {
 main() {
     current_desktop=$(detect_desktop_env)
     log_message "Detected desktop: $current_desktop"
+    switch_mimeapps_config "$current_desktop"
     switch_dconf_config "$current_desktop"
 }
 
 # Run main script
 main
-# END Configuration dconf
+# --- END Configuration dconf
+
 
 ## Execute in LiveCD
 if [ -e /usr/bin/startbiglive ]; then
