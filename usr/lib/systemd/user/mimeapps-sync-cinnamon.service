@@ -1,0 +1,15 @@
+[Unit]
+Description=Cinnamon mimeapps (file associations) synchronization service
+Documentation=man:mimeapps(5)
+PartOf=graphical-session.target
+After=graphical-session.target
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/mimeapps-sync-monitor-cinnamon
+ExecStop=/usr/bin/mimeapps-sync-stop-cinnamon
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=graphical-session.target
