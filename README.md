@@ -6,7 +6,6 @@
 
 [![License: GPL-3.0](https://img.shields.io/badge/License-GPL--3.0-blue.svg?style=for-the-badge)](LICENSE)
 [![Cinnamon](https://img.shields.io/badge/Cinnamon-DC682E?style=for-the-badge&logo=linux-mint&logoColor=white)](https://github.com/linuxmint/cinnamon)
-[![Arch Linux](https://img.shields.io/badge/Arch_Linux-1793D1?style=for-the-badge&logo=arch-linux&logoColor=white)](https://archlinux.org/)
 
 </div>
 
