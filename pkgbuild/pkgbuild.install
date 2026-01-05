@@ -13,7 +13,7 @@ reset="\e[0m"                # Reset text formatting
 # Print status messages
 printMsg() {
     local message=$1
-    echo -e "${blueDark}[${lightBlue}comm-cinnamon-config${blueDark}]${reset} ${cyan}→${reset} ${white}${message}${reset}"
+    echo -e "$blueDark[${lightBlue}comm-cinnamon-config$blueDark]$reset $cyan→$reset $white$message$reset"
 }
 
 # Function executed before package installation
