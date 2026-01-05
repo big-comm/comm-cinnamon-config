@@ -146,7 +146,6 @@
             "all",
             "Accessories",
             "Administration",
-            "Big Apps",
             "Games",
             "Graphics",
             "Internet",
@@ -183,9 +182,7 @@
     "folder-categories": {
         "type": "generic",
         "default": [],
-        "value": [
-            ""
-        ]
+        "value": []
     },
     "all-apps-old-style": {
         "type": "generic",
@@ -398,14 +395,14 @@
             "Qwant": 12
         },
         "tooltip": "Show an internet search option in search results",
-        "value": 1
+        "value": 0
     },
     "web-suggestions": {
         "type": "checkbox",
         "default": false,
         "description": "Web search suggestions",
         "tooltip": "With web search option, also show search suggestions. (Note: Search suggestions are provided by DuckDuckGo)",
-        "value": true
+        "value": false
     },
     "enable-home-folder-search": {
         "type": "checkbox",

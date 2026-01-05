@@ -1,0 +1,24 @@
+# Claude Code documentation
+CLAUDE.md
+.claude/
+
+# Editor and IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Build artifacts
+*.tar.gz
+*.tar.xz
+*.tar.zst
+pkg/
+src/
+
+# Pacman package files
+*.pkg.tar.zst
+*.pkg.tar.xz
+
+# Log files
+*.log

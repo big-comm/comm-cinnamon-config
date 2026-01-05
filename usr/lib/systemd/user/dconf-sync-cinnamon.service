@@ -1,0 +1,15 @@
+[Unit]
+Description=Cinnamon dconf settings synchronization service
+Documentation=man:dconf(1)
+PartOf=graphical-session.target
+After=graphical-session.target
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/dconf-sync-monitor-cinnamon
+ExecStop=/usr/bin/dconf-sync-stop-cinnamon
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=graphical-session.target
