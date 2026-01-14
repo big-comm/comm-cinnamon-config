@@ -119,7 +119,7 @@ gsettings set org.gnome.desktop.media-handling automount true
 #-------------------------------------------------------------------------------
 dconf_dir="$HOME/.config/dconf"
 mimeapps_dir="$HOME/.config"
-log_file="/tmp/dconf-switch-cinnamon.log"
+log_file="/tmp/dconf-switch-cinnamon-${UID}.log"
 
 log_message() {
     echo "[$(date '+%Y-%m-%d %H:%M:%S')] [CINNAMON] $1" | tee -a "$log_file"

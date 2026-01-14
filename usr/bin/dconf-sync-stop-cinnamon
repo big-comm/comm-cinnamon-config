@@ -11,7 +11,7 @@ set -euo pipefail
 DESKTOP_ENV="cinnamon"
 DCONF_DIR="$HOME/.config/dconf"
 SETTINGS_FILE="$DCONF_DIR/settings.$DESKTOP_ENV"
-LOG_FILE="/tmp/dconf-sync-$DESKTOP_ENV.log"
+LOG_FILE="/tmp/dconf-sync-$DESKTOP_ENV-${UID}.log"
 
 #-------------------------------------------------------------------------------
 # Logging Function
