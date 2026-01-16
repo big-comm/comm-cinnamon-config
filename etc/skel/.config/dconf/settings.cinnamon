@@ -29,6 +29,13 @@ dwell-time=1.2
 secondary-click-enabled=false
 secondary-click-time=1.2
 
+[org/cinnamon/desktop/applications/calculator]
+exec='gnome-calculator'
+
+[org/cinnamon/desktop/applications/terminal]
+exec='ashyterm %F'
+exec-arg='--'
+
 [org/cinnamon/desktop/background]
 picture-options='zoom'
 picture-uri='file:///usr/share/backgrounds/community/default-cinnamon.jpg'
@@ -113,12 +120,6 @@ dwell-threshold=10
 dwell-time=1.2
 secondary-click-enabled=false
 secondary-click-time=1.2
-
-[org/gnome/desktop/input-sources]
-current=uint32 0
-show-all-sources=false
-sources=@a(ss) []
-xkb-options=@as []
 
 [org/gnome/desktop/interface]
 can-change-accels=false
