@@ -2,7 +2,9 @@
 Type = Path
 Operation = Install
 Operation = Upgrade
-Target = usr/bin/cinnamon-session
+Target = usr/share/xsessions/cinnamon.desktop
+Target = usr/share/xsessions/cinnamon2d.desktop
+Target = usr/share/wayland-sessions/cinnamon-wayland.desktop
 Target = usr/bin/startcinnamon-community
 
 [Action]

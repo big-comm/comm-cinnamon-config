@@ -36,6 +36,12 @@ post_install() {
 #        mv /usr/share/cinnamon/cinnamon-settings/modules/cs_keyboard.py.new /usr/share/cinnamon/cinnamon-settings/modules/cs_keyboard.py
 #    fi
 
+    # Set up Cinnamon session integration
+    if [ -f "/usr/share/libalpm/scripts/startcinnamon-community" ]; then
+        printMsg "Setting up Cinnamon session integration..."
+        /usr/share/libalpm/scripts/startcinnamon-community
+    fi
+
     # Check if slick-greeter is installed
     printMsg "Checking LightDM configuration..."
     if grep -q '^greeter-session=lightdm-slick-greeter$' /etc/lightdm/lightdm.conf; then

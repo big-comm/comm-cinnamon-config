@@ -1,6 +1,8 @@
 #!/bin/sh
 
-# Adds startcinnamon-community to the Cinnamon session
-if [ "$(grep startcinnamon-community /usr/bin/cinnamon-session)" = "" ]; then
-    sed -i '/exec \/usr\/lib\/cinnamon-session\/cinnamon-session-binary/i . /usr/bin/startcinnamon-community' /usr/bin/cinnamon-session
-fi
+# Replace Exec= in X11 session .desktop files (preserves --session arguments)
+sed -i 's|Exec=cinnamon-session|Exec=/usr/bin/startcinnamon-community|g' /usr/share/xsessions/cinnamon.desktop 2>/dev/null
+sed -i 's|Exec=cinnamon-session|Exec=/usr/bin/startcinnamon-community|g' /usr/share/xsessions/cinnamon2d.desktop 2>/dev/null
+
+# Replace Exec= in Wayland session .desktop file
+sed -i 's|Exec=cinnamon-session|Exec=/usr/bin/startcinnamon-community|g' /usr/share/wayland-sessions/cinnamon-wayland.desktop 2>/dev/null

@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 # Tests if the card is NVIDIA, if so, uses the value of the variables
 lspci | grep -qi "vga.*nvidia" && {
@@ -216,3 +216,6 @@ if [ -e /usr/bin/startbiglive ]; then
     gsettings set org.cinnamon.desktop.screensaver lock-enabled false
     gsettings set org.cinnamon.desktop.screensaver idle-activation-enabled false
 fi
+
+# Execute cinnamon-session, passing through any arguments (e.g., --session cinnamon-wayland)
+exec /usr/bin/cinnamon-session "$@"
