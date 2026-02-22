@@ -1,8 +1,10 @@
 #!/bin/sh
 
-# Replace Exec= in X11 session .desktop files (preserves --session arguments)
-sed -i 's|Exec=cinnamon-session|Exec=/usr/bin/startcinnamon-community|g' /usr/share/xsessions/cinnamon.desktop 2>/dev/null
-sed -i 's|Exec=cinnamon-session|Exec=/usr/bin/startcinnamon-community|g' /usr/share/xsessions/cinnamon2d.desktop 2>/dev/null
+# Replace Exec= in X11 session .desktop files
+# Use full line replacement (^Exec=.*) to avoid prefix matching issues
+# Upstream uses Exec=cinnamon-session-cinnamon (wrapper), not Exec=cinnamon-session
+sed -i 's|^Exec=.*|Exec=/usr/bin/startcinnamon-community --session cinnamon|' /usr/share/xsessions/cinnamon.desktop 2>/dev/null
+sed -i 's|^Exec=.*|Exec=/usr/bin/startcinnamon-community --session cinnamon2d|' /usr/share/xsessions/cinnamon2d.desktop 2>/dev/null
 
 # Replace Exec= in Wayland session .desktop file
-sed -i 's|Exec=cinnamon-session|Exec=/usr/bin/startcinnamon-community|g' /usr/share/wayland-sessions/cinnamon-wayland.desktop 2>/dev/null
+sed -i 's|^Exec=.*|Exec=/usr/bin/startcinnamon-community --session cinnamon-wayland|' /usr/share/wayland-sessions/cinnamon-wayland.desktop 2>/dev/null
