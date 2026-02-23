@@ -159,16 +159,34 @@ load_dconf_config() {
     log_message "XDG_CURRENT_DESKTOP: $XDG_CURRENT_DESKTOP"
 
     # Load configuration for Cinnamon
-    if [ -f "$dconf_dir/settings.cinnamon" ]; then
+    local settings_file="$dconf_dir/settings.cinnamon"
+    local backup_file="$dconf_dir/settings.cinnamon.bak"
+
+    # Restore from backup if settings file is empty or missing (forced shutdown protection)
+    if [[ -f "$settings_file" && ! -s "$settings_file" && -s "$backup_file" ]]; then
+        log_message "WARNING: settings.cinnamon is empty, restoring from backup"
+        cp -f "$backup_file" "$settings_file"
+        log_message "Backup restored successfully"
+    fi
+
+    if [[ -s "$settings_file" ]]; then
         log_message "Found existing Cinnamon settings, loading..."
         log_message "Resetting dconf database"
         dconf reset -f /
 
-        log_message "Loading settings from: $dconf_dir/settings.cinnamon"
-        if dconf load / < "$dconf_dir/settings.cinnamon"; then
+        log_message "Loading settings from: $settings_file"
+        if dconf load / < "$settings_file"; then
             log_message "Cinnamon settings loaded successfully"
         else
             log_message "ERROR: Failed to load Cinnamon settings"
+            # Try backup if main file failed to load
+            if [[ -s "$backup_file" ]]; then
+                log_message "Attempting to load from backup..."
+                if dconf load / < "$backup_file"; then
+                    log_message "Backup settings loaded successfully"
+                    cp -f "$backup_file" "$settings_file"
+                fi
+            fi
         fi
     else
         log_message "No existing Cinnamon settings found - will create on first save"
