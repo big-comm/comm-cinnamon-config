@@ -46,7 +46,7 @@ image-source='directory:///usr/share/backgrounds/community'
 
 [org/cinnamon/desktop/interface]
 cursor-theme='Bibata-Modern-Classic'
-font-name='Noto Sans Nerd Font Medium 11'
+font-name='Noto Sans Nerd Font Medium 10'
 gtk-theme='adw-gtk3-dark'
 icon-theme='bigicons-papient-dark'
 text-scaling-factor=1.0
@@ -77,7 +77,7 @@ event-sounds=false
 [org/cinnamon/desktop/wm/preferences]
 min-window-opacity=30
 num-workspaces=3
-titlebar-font='Noto Sans Nerd Font Medium 11'
+titlebar-font='Noto Sans Nerd Font Medium 10'
 workspace-names=@as []
 
 [org/cinnamon/gestures]
@@ -132,7 +132,7 @@ cursor-blink-timeout=10
 cursor-size=24
 cursor-theme='Bibata-Modern-Classic'
 enable-animations=true
-font-name='Noto Sans Nerd Font Medium 11'
+font-name='Noto Sans Nerd Font Medium 10'
 gtk-color-palette='black:white:gray50:red:purple:blue:light blue:green:yellow:orange:lavender:brown:goldenrod4:dodger blue:pink:light green:gray10:gray30:gray75:gray90'
 gtk-color-scheme=''
 gtk-enable-primary-paste=true
@@ -147,7 +147,7 @@ icon-theme='bigicons-papient-dark'
 menubar-accel='F10'
 menubar-detachable=false
 menus-have-tearoff=false
-monospace-font-name='Noto Sans Mono Medium 12'
+monospace-font-name='Noto Sans Mono Medium 11'
 scaling-factor=uint32 0
 text-scaling-factor=1.0
 toolbar-detachable=false
@@ -195,7 +195,7 @@ num-workspaces=3
 raise-on-click=true
 resize-with-right-button=true
 theme='Adwaita'
-titlebar-font='Noto Sans Nerd Font Medium 11'
+titlebar-font='Noto Sans Nerd Font Medium 10'
 titlebar-uses-system-font=true
 visual-bell=false
 visual-bell-type='fullscreen-flash'
@@ -227,7 +227,7 @@ window-position=(38, 0)
 window-size=(1203, 723)
 
 [org/nemo/desktop]
-font='Noto Sans Nerd Font Medium 11'
+font='Noto Sans Nerd Font Medium 10'
 
 [org/nemo/extensions/nemo-terminal]
 default-terminal-height=7
