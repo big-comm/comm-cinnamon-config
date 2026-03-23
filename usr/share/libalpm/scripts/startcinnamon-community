@@ -8,3 +8,7 @@ sed -i 's|^Exec=.*|Exec=/usr/bin/startcinnamon-community --session cinnamon2d|' 
 
 # Replace Exec= in Wayland session .desktop file
 sed -i 's|^Exec=.*|Exec=/usr/bin/startcinnamon-community --session cinnamon-wayland|' /usr/share/wayland-sessions/cinnamon-wayland.desktop 2>/dev/null
+
+# Increase DefaultRestartSec to avoid race conditions with session startup scripts
+# (e.g., JamesDSP autostart service vs startcinnamon-community config changes)
+sed -i 's|#DefaultRestartSec=100ms|DefaultRestartSec=1000ms|g;s|#DefaultStartLimitBurst=5|DefaultStartLimitBurst=10|g' /etc/systemd/user.conf 2>/dev/null
