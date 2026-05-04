@@ -9,6 +9,7 @@ obex-enabled=false
 alttab-switcher-delay=100
 app-menu-icon-name='comm-menu'
 enabled-applets=['panel1:center:0:grouped-window-list@cinnamon.org:2', 'panel1:right:1:systray@cinnamon.org:3', 'panel1:right:3:xapp-status@cinnamon.org:4', 'panel1:right:4:notifications@cinnamon.org:5', 'panel1:right:5:printers@cinnamon.org:6', 'panel1:right:6:removable-drives@cinnamon.org:7', 'panel1:right:7:keyboard@cinnamon.org:8', 'panel1:right:8:favorites@cinnamon.org:9', 'panel1:right:9:network@cinnamon.org:10', 'panel1:right:10:sound@cinnamon.org:11', 'panel1:right:11:power@cinnamon.org:12', 'panel1:right:12:calendar@cinnamon.org:13', 'panel1:right:13:cornerbar@cinnamon.org:14', 'panel1:left:0:Cinnamenu@json:15', 'panel1:left:3:workspace-switcher@cinnamon.org:17']
+enabled-extensions=['big-shot@bigcommunity.org']
 next-applet-id=18
 panel-edit-mode=false
 panel-zone-icon-sizes='[{"panelId": 1, "left": -1, "center": 0, "right": 24}]'
@@ -52,16 +53,13 @@ icon-theme='bigicons-papient-dark'
 text-scaling-factor=1.0
 toolkit-accessibility=false
 
-[org/cinnamon/desktop/keybindings]
-custom-list=['custom0']
-
-[org/cinnamon/desktop/keybindings/custom-keybindings/custom0]
-binding=['Print']
-command='gnome-screenshot --interactive'
-name='ScreenShot Interactive'
-
 [org/cinnamon/desktop/keybindings/media-keys]
+area-screenshot=@as []
+area-screenshot-clip=@as []
 screenshot=@as []
+screenshot-clip=@as []
+window-screenshot=@as []
+window-screenshot-clip=@as []
 
 [org/cinnamon/desktop/notifications]
 bottom-notifications=true
