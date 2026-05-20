@@ -1,12 +1,5 @@
 #!/bin/bash
 
-# Tests if the card is NVIDIA, if so, uses the value of the variables
-lspci | grep -qi "vga.*nvidia" && {
-   export GSK_RENDERER=ngl
-   export GDK_DISABLE=vulkan
-   export GDK_GL_DISABLE=buffer-storage
-}
-
 # Defining the default visual style to be used in applications that use Qt
 [[ -z $QT_STYLE_OVERRIDE ]] && export QT_STYLE_OVERRIDE="kvantum"
 [[ -z $QT_QPA_PLATFORMTHEME ]] && export QT_QPA_PLATFORMTHEME="xdg-desktop-portal"
@@ -31,19 +24,14 @@ else
     logger "sync-gnome-theme-to-qt.sh not found"
 fi
 
+# Force software GTK renderer in VMs/mesa-amber sessions with broken Vulkan.
+if compgen -G /var/lib/pacman/local/mesa-amber-* >/dev/null || systemd-detect-virt -q; then
+    [[ -z $GSK_RENDERER ]] && export GSK_RENDERER="cairo"
+fi
+
 # Force language
 if [ "$LANGUAGE" = "" ]; then
     [[ -z $LANGUAGE ]] && export LANGUAGE=$LANG
-fi
-
-# Render loop basic if using software render and change GTK4 from vulkan to ngl
-if vulkaninfo --summary 2> /dev/null | grep 'deviceName' | grep -vq 'llvmpipe'; then
-    unset QSG_RENDER_LOOP
-    # Temporarily forcing GTK Renderer GL since 2024/10/11
-    [[ -z $GSK_RENDERER ]] && export GSK_RENDERER="vulkan"
-else
-    export QSG_RENDER_LOOP="basic"
-    [[ -z $GSK_RENDERER ]] && export GSK_RENDERER="ngl"
 fi
 
 # Checks if the shell has already been changed
