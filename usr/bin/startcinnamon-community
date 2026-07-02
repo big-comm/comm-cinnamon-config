@@ -8,26 +8,46 @@
 # Apps in electron use wayland
 [[ -z $ELECTRON_OZONE_PLATFORM_HINT ]] && export ELECTRON_OZONE_PLATFORM_HINT="auto"
 
-# Check system theme to apply if the QT theme is clade or dark
-if [ -f "/usr/share/sync-kde-and-gtk-places/sync-gnome-theme-to-qt.sh" ]; then
-    # Tenta executar 3 vezes com intervalo de 1 segundo
-    for i in {1..3}; do
-        if /usr/share/sync-kde-and-gtk-places/sync-gnome-theme-to-qt.sh; then
-            logger "sync-gnome-theme-to-qt.sh executed successfully"
-            break
-        else
-            logger "Failed to execute sync-gnome-theme-to-qt.sh, attempt $i"
-            sleep 0.5
-        fi
-    done
-else
-    logger "sync-gnome-theme-to-qt.sh not found"
-fi
+# Cinnamon must own the session environment before theme sync runs.
+export DESKTOP_SESSION=cinnamon
+export XDG_SESSION_DESKTOP=cinnamon
+export XDG_CURRENT_DESKTOP=X-Cinnamon
+export GDMSESSION=cinnamon
+unset ADW_DEBUG_COLOR_SCHEME
 
 # Force software GTK renderer in VMs/mesa-amber sessions with broken Vulkan.
 if compgen -G /var/lib/pacman/local/mesa-amber-* >/dev/null || systemd-detect-virt -q; then
     [[ -z $GSK_RENDERER ]] && export GSK_RENDERER="cairo"
 fi
+
+start_graphical_session_bridge() {
+    if command -v systemctl >/dev/null 2>&1; then
+        systemctl --user import-environment \
+            DISPLAY XAUTHORITY XDG_CURRENT_DESKTOP DESKTOP_SESSION XDG_SESSION_DESKTOP XDG_SESSION_TYPE \
+            2>/dev/null || true
+        systemctl --user start biglinux-graphical-session.target 2>/dev/null || true
+    fi
+}
+
+sync_theme_to_qt() {
+    if [ -f "/usr/share/sync-kde-and-gtk-places/sync-gnome-theme-to-qt.sh" ]; then
+        for i in {1..3}; do
+            if /usr/share/sync-kde-and-gtk-places/sync-gnome-theme-to-qt.sh; then
+                logger "sync-gnome-theme-to-qt.sh executed successfully"
+                return 0
+            else
+                logger "Failed to execute sync-gnome-theme-to-qt.sh, attempt $i"
+                sleep 0.5
+            fi
+        done
+    else
+        logger "sync-gnome-theme-to-qt.sh not found"
+    fi
+
+    return 1
+}
+
+start_graphical_session_bridge
 
 # Force language
 if [ "$LANGUAGE" = "" ]; then
@@ -147,6 +167,8 @@ load_dconf_config() {
 
     log_message "Loading Cinnamon dconf configuration"
     log_message "XDG_CURRENT_DESKTOP: $XDG_CURRENT_DESKTOP"
+    log_message "Stopping sync-gnome-theme-to-qt.path temporarily..."
+    systemctl --user stop sync-gnome-theme-to-qt.path 2>/dev/null || true
 
     # Load configuration for Cinnamon
     local settings_file="$dconf_dir/settings.cinnamon"
@@ -181,6 +203,9 @@ load_dconf_config() {
     else
         log_message "No existing Cinnamon settings found - will create on first save"
     fi
+
+    log_message "Restarting sync-gnome-theme-to-qt.path..."
+    systemctl --user start sync-gnome-theme-to-qt.path 2>/dev/null || true
 }
 
 # Function to start systemd sync services
@@ -222,6 +247,8 @@ load_dconf_config
 # Start monitoring services
 start_sync_services
 
+sync_theme_to_qt
+
 log_message "Cinnamon session configuration completed"
 # --- END Configuration dconf and mimeapps
 
@@ -230,11 +257,12 @@ log_message "Cinnamon session configuration completed"
 # ### Execute in LiveCD
 #-------------------------------------------------------------------------------
 if [ -e /usr/bin/startbiglive ]; then
-    # Revert variables to Gnome
+    # Ensure Cinnamon session variables in live mode.
     export DESKTOP_SESSION=cinnamon
     export XDG_SESSION_DESKTOP=cinnamon
     export XDG_CURRENT_DESKTOP=X-Cinnamon
     export GDMSESSION=cinnamon
+    unset ADW_DEBUG_COLOR_SCHEME
 
     # Enables basic, unencrypted password storage in Chromium-based browsers
     sudo sed -i '/--password-store=basic/!s/\(exec \/usr\/lib\/brave-browser\/brave "$@" $USER_FLAGS\)$/\1 --password-store=basic/' /usr/bin/brave

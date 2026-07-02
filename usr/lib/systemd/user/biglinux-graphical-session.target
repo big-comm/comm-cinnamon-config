@@ -1,0 +1,4 @@
+[Unit]
+Description=BigLinux graphical session bridge
+Wants=graphical-session.target
+After=graphical-session-pre.target
