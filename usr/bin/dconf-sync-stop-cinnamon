@@ -9,6 +9,7 @@ DESKTOP_ENV="cinnamon"
 DCONF_DIR="${HOME}/.config/dconf"
 SETTINGS_FILE="${DCONF_DIR}/settings.${DESKTOP_ENV}"
 LOG_FILE="/tmp/dconf-sync-${DESKTOP_ENV}.log"
+SKIP_SAVE_FILE="${XDG_RUNTIME_DIR:-/tmp}/dconf-sync-cinnamon.skip-save"
 
 # Logging function
 log_message() {
@@ -16,6 +17,11 @@ log_message() {
 }
 
 log_message "Stopping dconf sync service"
+
+if [[ -e "$SKIP_SAVE_FILE" ]]; then
+    log_message "Skipping final save - temporary stop requested"
+    exit 0
+fi
 
 # Check if dconf is still responsive and has valid settings
 # During session shutdown, dconf may already be reset to defaults

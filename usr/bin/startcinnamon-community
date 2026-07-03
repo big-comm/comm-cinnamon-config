@@ -47,6 +47,81 @@ sync_theme_to_qt() {
     return 1
 }
 
+get_live_theme_mode() {
+    [[ -f /tmp/big_desktop_theme ]] || return 1
+
+    case "$(< /tmp/big_desktop_theme)" in
+        light|dark)
+            cat /tmp/big_desktop_theme
+            ;;
+        *)
+            return 1
+            ;;
+    esac
+}
+
+apply_cinnamon_theme_mode() {
+    local mode="$1"
+    local color_scheme gtk_theme icon_theme cinnamon_theme prefer_dark
+
+    if [[ "$mode" == "dark" ]]; then
+        color_scheme="prefer-dark"
+        gtk_theme="adw-gtk3-dark"
+        icon_theme="bigicons-papient-dark"
+        cinnamon_theme="Big-Orange"
+        prefer_dark="true"
+    else
+        color_scheme="default"
+        gtk_theme="adw-gtk3"
+        icon_theme="bigicons-papient"
+        cinnamon_theme="Big-Orange-Light"
+        prefer_dark="false"
+    fi
+
+    dconf write /org/gnome/desktop/interface/color-scheme "'$color_scheme'" 2>/dev/null || true
+    dconf write /org/gnome/desktop/interface/gtk-theme "'$gtk_theme'" 2>/dev/null || true
+    dconf write /org/gnome/desktop/interface/icon-theme "'$icon_theme'" 2>/dev/null || true
+    dconf write /org/cinnamon/desktop/interface/gtk-theme "'$gtk_theme'" 2>/dev/null || true
+    dconf write /org/cinnamon/desktop/interface/icon-theme "'$icon_theme'" 2>/dev/null || true
+    dconf write /org/cinnamon/theme/name "'$cinnamon_theme'" 2>/dev/null || true
+
+    mkdir -p "$HOME/.config/gtk-3.0" "$HOME/.config/gtk-4.0"
+    for gtk_settings in "$HOME/.config/gtk-3.0/settings.ini" "$HOME/.config/gtk-4.0/settings.ini"; do
+        touch "$gtk_settings"
+        grep -q '^\[Settings\]' "$gtk_settings" || sed -i '1i[Settings]' "$gtk_settings"
+        for key in gtk-theme-name gtk-icon-theme-name gtk-application-prefer-dark-theme; do
+            sed -i "/^${key}=/d" "$gtk_settings"
+        done
+        sed -i "/^\[Settings\]/a gtk-application-prefer-dark-theme=${prefer_dark}" "$gtk_settings"
+        sed -i "/^\[Settings\]/a gtk-icon-theme-name=${icon_theme}" "$gtk_settings"
+        sed -i "/^\[Settings\]/a gtk-theme-name=${gtk_theme}" "$gtk_settings"
+    done
+
+    export ADW_DEBUG_COLOR_SCHEME="$color_scheme"
+    dbus-update-activation-environment --systemd ADW_DEBUG_COLOR_SCHEME 2>/dev/null || true
+    systemctl --user import-environment ADW_DEBUG_COLOR_SCHEME 2>/dev/null || true
+}
+
+apply_live_theme_mode() {
+    local mode
+
+    mode="$(get_live_theme_mode)" || return 0
+    log_message "Applying live Cinnamon theme mode: $mode"
+    apply_cinnamon_theme_mode "$mode"
+}
+
+settle_live_theme_and_start_sync() {
+    (
+        for delay in 2 4 6; do
+            sleep "$delay"
+            apply_live_theme_mode
+            sync_theme_to_qt
+        done
+
+        start_sync_services
+    ) &
+}
+
 start_graphical_session_bridge
 
 # Force language
@@ -167,7 +242,12 @@ load_dconf_config() {
 
     log_message "Loading Cinnamon dconf configuration"
     log_message "XDG_CURRENT_DESKTOP: $XDG_CURRENT_DESKTOP"
-    log_message "Stopping sync-gnome-theme-to-qt.path temporarily..."
+    log_message "Stopping theme and dconf sync temporarily..."
+    local skip_save_file="${XDG_RUNTIME_DIR:-/tmp}/dconf-sync-cinnamon.skip-save"
+    touch "$skip_save_file" 2>/dev/null || true
+    systemctl --user stop dconf-sync-cinnamon.service 2>/dev/null || true
+    rm -f "$skip_save_file" 2>/dev/null || true
+    systemctl --user stop sync-gnome-theme-to-qt.service 2>/dev/null || true
     systemctl --user stop sync-gnome-theme-to-qt.path 2>/dev/null || true
 
     # Load configuration for Cinnamon
@@ -204,8 +284,7 @@ load_dconf_config() {
         log_message "No existing Cinnamon settings found - will create on first save"
     fi
 
-    log_message "Restarting sync-gnome-theme-to-qt.path..."
-    systemctl --user start sync-gnome-theme-to-qt.path 2>/dev/null || true
+    apply_live_theme_mode
 }
 
 # Function to start systemd sync services
@@ -233,6 +312,14 @@ start_sync_services() {
     else
         log_message "WARNING: Failed to start mimeapps-sync service"
     fi
+
+    # Start GTK/Qt theme sync path after the initial dconf load has settled.
+    log_message "Starting sync-gnome-theme-to-qt.path"
+    if systemctl --user start sync-gnome-theme-to-qt.path 2>/dev/null; then
+        log_message "theme sync path started successfully"
+    else
+        log_message "WARNING: Failed to start theme sync path"
+    fi
 }
 
 # Main execution
@@ -244,10 +331,13 @@ log_message "=========================================="
 load_mimeapps_config
 load_dconf_config
 
-# Start monitoring services
-start_sync_services
-
 sync_theme_to_qt
+
+if [ -e /usr/bin/startbiglive ]; then
+    settle_live_theme_and_start_sync
+else
+    start_sync_services
+fi
 
 log_message "Cinnamon session configuration completed"
 # --- END Configuration dconf and mimeapps
