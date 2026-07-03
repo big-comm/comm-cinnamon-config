@@ -94,9 +94,8 @@ apply_cinnamon_theme_mode() {
         sed -i "/^\[Settings\]/a gtk-theme-name=${gtk_theme}" "$gtk_settings"
     done
 
-    export ADW_DEBUG_COLOR_SCHEME="default"
-    dbus-update-activation-environment --systemd ADW_DEBUG_COLOR_SCHEME 2>/dev/null || true
-    systemctl --user import-environment ADW_DEBUG_COLOR_SCHEME 2>/dev/null || true
+    unset ADW_DEBUG_COLOR_SCHEME
+    systemctl --user unset-environment ADW_DEBUG_COLOR_SCHEME 2>/dev/null || true
 }
 
 apply_live_theme_mode() {
@@ -120,6 +119,7 @@ settle_live_theme_and_start_sync() {
 }
 
 start_graphical_session_bridge
+systemctl --user unset-environment ADW_DEBUG_COLOR_SCHEME 2>/dev/null || true
 
 # Force language
 if [ "$LANGUAGE" = "" ]; then
