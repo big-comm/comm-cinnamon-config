@@ -62,20 +62,18 @@ get_live_theme_mode() {
 
 apply_cinnamon_theme_mode() {
     local mode="$1"
-    local color_scheme gtk_theme icon_theme cinnamon_theme prefer_dark
+    local color_scheme gtk_theme icon_theme cinnamon_theme
 
     if [[ "$mode" == "dark" ]]; then
         color_scheme="prefer-dark"
         gtk_theme="adw-gtk3-dark"
         icon_theme="bigicons-papient-dark"
         cinnamon_theme="Big-Orange"
-        prefer_dark="true"
     else
         color_scheme="default"
         gtk_theme="adw-gtk3"
         icon_theme="bigicons-papient"
         cinnamon_theme="Big-Orange-Light"
-        prefer_dark="false"
     fi
 
     dconf write /org/gnome/desktop/interface/color-scheme "'$color_scheme'" 2>/dev/null || true
@@ -92,12 +90,11 @@ apply_cinnamon_theme_mode() {
         for key in gtk-theme-name gtk-icon-theme-name gtk-application-prefer-dark-theme; do
             sed -i "/^${key}=/d" "$gtk_settings"
         done
-        sed -i "/^\[Settings\]/a gtk-application-prefer-dark-theme=${prefer_dark}" "$gtk_settings"
         sed -i "/^\[Settings\]/a gtk-icon-theme-name=${icon_theme}" "$gtk_settings"
         sed -i "/^\[Settings\]/a gtk-theme-name=${gtk_theme}" "$gtk_settings"
     done
 
-    export ADW_DEBUG_COLOR_SCHEME="$color_scheme"
+    export ADW_DEBUG_COLOR_SCHEME="default"
     dbus-update-activation-environment --systemd ADW_DEBUG_COLOR_SCHEME 2>/dev/null || true
     systemctl --user import-environment ADW_DEBUG_COLOR_SCHEME 2>/dev/null || true
 }
