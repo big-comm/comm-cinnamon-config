@@ -47,6 +47,13 @@ sync_theme_to_qt() {
     return 1
 }
 
+sync_xapp_portal_color_scheme() {
+    local color_scheme="$1"
+
+    gsettings writable org.x.apps.portal color-scheme >/dev/null 2>&1 || return 0
+    gsettings set org.x.apps.portal color-scheme "$color_scheme" 2>/dev/null || true
+}
+
 get_live_theme_mode() {
     [[ -f /tmp/big_desktop_theme ]] || return 1
 
@@ -82,6 +89,7 @@ apply_cinnamon_theme_mode() {
     dconf write /org/cinnamon/desktop/interface/gtk-theme "'$gtk_theme'" 2>/dev/null || true
     dconf write /org/cinnamon/desktop/interface/icon-theme "'$icon_theme'" 2>/dev/null || true
     dconf write /org/cinnamon/theme/name "'$cinnamon_theme'" 2>/dev/null || true
+    sync_xapp_portal_color_scheme "$color_scheme"
 
     mkdir -p "$HOME/.config/gtk-3.0" "$HOME/.config/gtk-4.0"
     for gtk_settings in "$HOME/.config/gtk-3.0/settings.ini" "$HOME/.config/gtk-4.0/settings.ini"; do
