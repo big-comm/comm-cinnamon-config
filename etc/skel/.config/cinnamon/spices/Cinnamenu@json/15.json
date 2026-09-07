@@ -578,7 +578,7 @@
         "default_category": "Linux",
         "default_icon": "cinnamon-symbolic",
         "tooltip": "Panel icon",
-        "value": "/usr/share/pixmaps/comm-menu.svg"
+        "value": "/usr/share/pixmaps/comm-menu-white.svg"
     },
     "menu-icon-size-custom": {
         "type": "checkbox",
