@@ -39,7 +39,7 @@ exec-arg='--'
 
 [org/cinnamon/desktop/background]
 picture-options='zoom'
-picture-uri='file:///usr/share/backgrounds/community/default-cinnamon.jpg'
+picture-uri='file:///usr/share/backgrounds/community/Snowy.jpg'
 
 [org/cinnamon/desktop/background/slideshow]
 delay=15
